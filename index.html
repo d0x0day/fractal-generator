@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фрактальный генератор</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #121212, #1E1E1E, #0D1B2A);
+            color: #E0E0E0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background-color: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .formula-input {
+            color: #E0E0E0;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: solid 3px #424242;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            background-color: #2D2D2D;
+        }
+
+        .formula-input:hover{
+            border: solid 3px #1565C0;
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .preset-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .generate-btn {
+            background-color: #2E7D32;
+            color: white;
+        }
+
+        .generate-btn:hover {
+            background-color: #388E3C;
+        }
+
+        .reset-btn {
+            background-color: #C62828;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background-color: #D32F2F;
+        }
+
+        .fractal-container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #000;
+        }
+
+        .loading {
+            display: none;
+            margin: 1rem 0;
+            font-size: 1.2rem;
+        }
+
+        footer {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #1565C0;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: #42A5F5;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .preset-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Фрактальный генератор</h1>
+        <p class="subtitle">Создавайте красивые фракталы с помощью математических формул</p>
+    </header>
+
+    <main>
+        <section class="input-section">
+            <input type="text" class="formula-input" id="formulaInput" 
+                   placeholder="Введите формулу (например: z^2 + c)" value="z^2 + c">
+            
+            <div class="preset-buttons">
+                <button class="preset-btn" data-formula="z^2 + c">Мандельброт</button>
+                <button class="preset-btn" data-formula="z^3 + c">Кубический Мандельброт</button>
+                <button class="preset-btn" data-formula="z^4 + c">Квартичный Мандельброт</button>
+                <button class="preset-btn" data-formula="z^5 + c">Квинтический Мандельброт</button>
+                <button class="preset-btn" data-formula="sin(z) + c">Синусоидальный</button>
+                <button class="preset-btn" data-formula="cos(z) + c">Косинусоидальный</button>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn generate-btn" id="generateBtn">Сгенерировать фрактал</button>
+                <button class="action-btn reset-btn" id="resetBtn">Сбросить</button>
+            </div>
+        </section>
+
+        <section class="fractal-container">
+            <div class="loading" id="loading">Генерация фрактала...</div>
+            <canvas id="fractalCanvas" width="800" height="600"></canvas>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>Фрактальный генератор &copy; 2025</p>
+            <p>Создано с использованием HTML5, CSS3 и JavaScript</p>
+            <p>By d0x0day</p>
+            <div class="footer-links">
+                <a href="https://github.com/yourusername/fractal-generator" target="_blank">GitHub репозиторий</a>
+                <a href="https://pages.github.com/" target="_blank">О GitHub Pages</a>
+                <a href="https://en.wikipedia.org/wiki/Fractal" target="_blank">Узнать о фракталах</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('fractalCanvas');
+            const ctx = canvas.getContext('2d');
+            const formulaInput = document.getElementById('formulaInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const loading = document.getElementById('loading');
+            const presetButtons = document.querySelectorAll('.preset-btn');
+            
+            // Настройки фрактала
+            let maxIterations = 100;
+            let zoom = 200;
+            let offsetX = canvas.width / 2;
+            let offsetY = canvas.height / 2;
+            
+            // Цветовая палитра
+            const colors = [];
+            for (let i = 0; i < maxIterations; i++) {
+                const r = Math.sin(0.3 * i + 0) * 127 + 128;
+                const g = Math.sin(0.3 * i + 2) * 127 + 128;
+                const b = Math.sin(0.3 * i + 4) * 127 + 128;
+                colors[i] = `rgb(${r}, ${g}, ${b})`;
+            }
+            colors[maxIterations] = 'rgb(0, 0, 0)'; // Черный для точек внутри множества
+            
+            // Функция для вычисления фрактала
+            function calculateFractal(formula) {
+                loading.style.display = 'block';
+                
+                // Даем браузеру время отобразить индикатор загрузки
+                setTimeout(() => {
+                    const imageData = ctx.createImageData(canvas.width, canvas.height);
+                    const data = imageData.data;
+                    
+                    for (let x = 0; x < canvas.width; x++) {
+                        for (let y = 0; y < canvas.height; y++) {
+                            const cx = (x - offsetX) / zoom;
+                            const cy = (y - offsetY) / zoom;
+                            
+                            let zx = 0;
+                            let zy = 0;
+                            
+                            let iter = 0;
+                            while (iter < maxIterations) {
+                                // Парсим и вычисляем формулу
+                                let newZx, newZy;
+                                
+                                try {
+                                    // В итоговой версии допилить полноценный парсер формул
+                                    if (formula === 'z^2 + c') {
+                                        newZx = zx * zx - zy * zy + cx;
+                                        newZy = 2 * zx * zy + cy;
+                                    } else if (formula === 'z^3 + c') {
+                                        newZx = zx * zx * zx - 3 * zx * zy * zy + cx;
+                                        newZy = 3 * zx * zx * zy - zy * zy * zy + cy;
+                                    } else if (formula === 'z^4 + c') {
+                                        const x2 = zx * zx;
+                                        const y2 = zy * zy;
+                                        newZx = x2 * x2 - 6 * x2 * y2 + y2 * y2 + cx;
+                                        newZy = 4 * zx * zy * (x2 - y2) + cy;
+                                    } else if (formula === 'z^5 + c') {
+                                        const x2 = zx * zx;
+                                        const y2 = zy * zy;
+                                        newZx = zx * (x2 * x2 - 10 * x2 * y2 + 5 * y2 * y2) + cx;
+                                        newZy = zy * (5 * x2 * x2 - 10 * x2 * y2 + y2 * y2) + cy;
+                                    } else if (formula === 'sin(z) + c') {
+                                        newZx = Math.sin(zx) * Math.cosh(zy) + cx;
+                                        newZy = Math.cos(zx) * Math.sinh(zy) + cy;
+                                    } else if (formula === 'cos(z) + c') {
+                                        newZx = Math.cos(zx) * Math.cosh(zy) + cx;
+                                        newZy = -Math.sin(zx) * Math.sinh(zy) + cy;
+                                    } else {
+                                        // По умолчанию используем формулу Мандельброта
+                                        newZx = zx * zx - zy * zy + cx;
+                                        newZy = 2 * zx * zy + cy;
+                                    }
+                                } catch (e) {
+                                    // В случае ошибки используем формулу Мандельброта
+                                    newZx = zx * zx - zy * zy + cx;
+                                    newZy = 2 * zx * zy + cy;
+                                }
+                                
+                                zx = newZx;
+                                zy = newZy;
+                                
+                                if (zx * zx + zy * zy > 4) break;
+                                iter++;
+                            }
+                            
+                            const idx = (y * canvas.width + x) * 4;
+                            const color = colors[iter];
+                            
+                            // Парсим цвет
+                            const rgb = color.match(/\d+/g);
+                            data[idx] = parseInt(rgb[0]);     // R
+                            data[idx + 1] = parseInt(rgb[1]); // G
+                            data[idx + 2] = parseInt(rgb[2]); // B
+                            data[idx + 3] = 255;              // A
+                        }
+                    }
+                    
+                    ctx.putImageData(imageData, 0, 0);
+                    loading.style.display = 'none';
+                }, 50);
+            }
+            
+            // Обработчики событий
+            generateBtn.addEventListener('click', function() {
+                calculateFractal(formulaInput.value);
+            });
+            
+            resetBtn.addEventListener('click', function() {
+                formulaInput.value = 'z^2 + c';
+                calculateFractal('z^2 + c');
+            });
+            
+            presetButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    formulaInput.value = this.getAttribute('data-formula');
+                    calculateFractal(this.getAttribute('data-formula'));
+                });
+            });
+            
+            // Генерируем начальный фрактал
+            calculateFractal('z^2 + c');
+        });
+    </script>
+</body>
+</html>
