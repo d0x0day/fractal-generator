@@ -21,7 +21,7 @@ A beautiful and interactive web application for generating colorful fractals usi
 ## 🚀 Quick Start 🚀
 
 ### Option 1
-Click `https://d0x0day.github.io/fractal-generator/`
+Click (https://d0x0day.github.io/fractal-generator/)
 
 ### Option 2: Local Development
 1. Clone the repository:
